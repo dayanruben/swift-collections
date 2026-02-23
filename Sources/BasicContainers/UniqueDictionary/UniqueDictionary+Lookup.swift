@@ -17,6 +17,11 @@ import ContainersPreview
 
 @available(SwiftStdlib 5.0, *)
 extension UniqueDictionary where Key: ~Copyable, Value: ~Copyable {
+  @inlinable
+  public func containsKey(_ key: borrowing Key) -> Bool {
+    _storage.containsKey(key)
+  }
+
 #if COLLECTIONS_UNSTABLE_CONTAINERS_PREVIEW
   @inlinable
   @_lifetime(borrow self)

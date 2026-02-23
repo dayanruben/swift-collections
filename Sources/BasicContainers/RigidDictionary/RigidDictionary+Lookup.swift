@@ -24,6 +24,11 @@ extension RigidDictionary where Key: ~Copyable, Value: ~Copyable {
   ) -> (bucket: _Bucket?, hashValue: Int) {
     self._keys._find(key)
   }
+  
+  @inlinable
+  public func containsKey(_ key: borrowing Key) -> Bool {
+    _find(key).bucket != nil
+  }
     
 #if COLLECTIONS_UNSTABLE_CONTAINERS_PREVIEW
   @inlinable
