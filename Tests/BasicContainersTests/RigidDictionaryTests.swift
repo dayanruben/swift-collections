@@ -278,6 +278,67 @@ class RigidDictionaryTests: CollectionTestCase {
       }
     }
   }
+  
+  func test_removeValueForKey_one() {
+    typealias Key = LifetimeTracked<Int>
+    typealias Value = LifetimeTracked<String>
+    withEvery("capacity", in: [1, 2, 10, 100, 200]) { capacity in
+      withEvery("count", in: [1, capacity / 3, capacity / 2, 2 * capacity / 3, capacity - 1, capacity] as Set) { count in
+        guard count > 0 else { return }
+        withSome("key", in: 0 ..< count) { key in
+          withLifetimeTracking { tracker in
+            var d = RigidDictionary<Key, Value>(capacity: capacity)
+            for i in 0 ..< count {
+              let key = tracker.instance(for: i)
+              let value = tracker.instance(for: "\(i)")
+              d.insertValue(value, forKey: key)
+            }
+            
+            let oldValue = d.removeValue(forKey: tracker.instance(for: key))
+            expectNotNil(oldValue) {
+              expectEqual($0.payload, "\(key)")
+            }
+            expectEqual(d.count, count - 1)
+            expectEqual(d.capacity, capacity)
+            
+            for i in 0 ..< count {
+              let value = d.withValue(forKey: tracker.instance(for: i)) { $0 }
+              if i == key {
+                expectNil(value)
+              } else {
+                expectEqual(value?.payload, "\(i)")
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  
+  func test_removeValueForKey_all() {
+    typealias Key = LifetimeTracked<Int>
+    typealias Value = LifetimeTracked<String>
+    withEvery("capacity", in: [1, 2, 10, 100, 200]) { capacity in
+      withLifetimeTracking { tracker in
+        var d = RigidDictionary<Key, Value>(capacity: capacity)
+        for i in 0 ..< capacity {
+          let key = tracker.instance(for: i)
+          let value = tracker.instance(for: "\(i)")
+          d.insertValue(value, forKey: key)
+        }
+        
+        withEvery("key", in: 0 ..< capacity) { key in
+          let oldValue = d.removeValue(forKey: tracker.instance(for: key))
+          expectNotNil(oldValue) {
+            expectEqual($0.payload, "\(key)")
+          }
+          expectEqual(d.count, capacity - key - 1)
+          expectEqual(d.capacity, capacity)
+        }
+        expectEqual(d.count, 0)
+      }
+    }
+  }
 }
 
 #endif
