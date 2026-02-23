@@ -15,6 +15,7 @@ import Collections
 #else
 import _CollectionsTestSupport
 import BasicContainers
+import ContainersPreview
 #endif
 
 #if compiler(>=6.3) && COLLECTIONS_UNSTABLE_NONCOPYABLE_KEYS
@@ -98,7 +99,7 @@ class RigidDictionaryTests: CollectionTestCase {
         expectEqual(valueRef.value.payload, "forty-two")
       }
 #endif
-
+      
       expectEqual(d.count, 1)
       expectFalse(d.isEmpty)
       expectFalse(d.isFull)
@@ -225,7 +226,7 @@ class RigidDictionaryTests: CollectionTestCase {
         }
         expectIdentical(v2.value, value1)
       }
-
+      
       let key3 = tracker.instance(for: 42)
       expectNotNil(d.value(forKey: key3)) { valueRef in
         expectIdentical(valueRef.value, value1)
