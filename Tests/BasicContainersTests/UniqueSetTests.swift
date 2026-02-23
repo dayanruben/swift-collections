@@ -116,7 +116,7 @@ class UniqueSetTests: CollectionTestCase {
   func test_insert_growth() {
     // These are the storage capacities we expect to see for a UniqueSet
     // up to size 1000.
-    var expectedCapacities = [
+    let expectedCapacities = [
       0, 1, 2, 4, 7, 14, 28, 56, 112, 224, 448, 896, 1792
     ]
     var j = 0
