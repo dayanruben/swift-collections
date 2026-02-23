@@ -36,70 +36,43 @@ extension RigidSet where Element: ~Copyable {
   
   @inlinable
   @inline(__always)
+  @discardableResult
   package mutating func _insertNew(
     _ item: consuming Element,
-    hashValue: Int,
-    swapper: (borrowing Element, _Bucket) -> Void = { _, _ in }
+    hashValue: Int
   ) -> _Bucket {
     precondition(!isFull, "RigidSet capacity overflow")
     let storage = _memberBuf
     if _table.isSmall {
       let bucket = _table.insertNew_Small(
         swapper: {
-          swapper(item, $0)
           swap(&item, &storage[$0])
         })
       storage._initializeElement(at: bucket, to: item)
       return bucket
     }
-    return _insertNew_Large(item, hashValue: hashValue, swapper: swapper)
-  }
-  
-  
-  @inlinable
-  @inline(__always)
-  package mutating func _insertNew_Large(
-    _ item: consuming Element,
-    swapper: (borrowing Element, _Bucket) -> Void = { _, _ in }
-  ) -> _Bucket {
-    _insertNew_Large(item, hashValue: _hashValue(for: item), swapper: swapper)
+    return _insertNew_Large(item, hashValue: hashValue)
   }
   
   @inlinable
+  @discardableResult
   package mutating func _insertNew_Large(
     _ item: consuming Element,
-    hashValue: Int,
-    swapper: (borrowing Element, _Bucket) -> Void = { _, _ in }
+    hashValue: Int
   ) -> _Bucket {
     let storage = _memberBuf
     let seed = self._seed
     let bucket = _table.insertNew_Large(
       hashValue: hashValue,
       hashGenerator: {
-        storage[$0.offset]._rawHashValue(seed: seed)
+        storage[$0]._rawHashValue(seed: seed)
       },
       swapper: {
-        swapper(item, $0)
-        swap(&item, &storage[$0.offset])
+        swap(&item, &storage[$0])
       })
     storage.initializeElement(at: bucket.offset, to: item)
     return bucket
   }
-  
-  @inlinable
-  @discardableResult
-  package mutating func _insert(
-    _ item: consuming Element,
-    swapper: (borrowing Element, _Bucket) -> Void = { _, _ in }
-  ) -> _InsertResult {
-    let r = _find(item)
-    if let bucket = r.bucket {
-      return .init(bucket: bucket, remnant: item)
-    }
-    let bucket = _insertNew(item, hashValue: r.hashValue, swapper: swapper)
-    return .init(bucket: bucket, remnant: nil)
-  }
-  
   
   /// Inserts the given element into the set unconditionally. If the set already
   /// contained a member equal to `item`, then the new item replaces it.
@@ -112,9 +85,12 @@ extension RigidSet where Element: ~Copyable {
   public mutating func update(
     with item: consuming Element
   ) -> Element? {
-    var r = self._insert(item)
-    guard let remnant = r.remnant.take() else { return nil }
-    return exchange(&_memberBuf[r.bucket.offset], with: remnant)
+    let r = _find(item)
+    if let bucket = r.bucket {
+      return exchange(&_memberPtr(at: bucket).pointee, with: item)
+    }
+    _insertNew(item, hashValue: r.hashValue)
+    return nil
   }
   
   /// Inserts the given element in the set if it is not already present.
@@ -126,8 +102,12 @@ extension RigidSet where Element: ~Copyable {
   public mutating func insert(
     _ item: consuming Element
   ) -> Element? {
-    var r = self._insert(item)
-    return r.remnant.take()
+    let r = _find(item)
+    if r.bucket != nil {
+      return item
+    }
+    _insertNew(item, hashValue: r.hashValue)
+    return nil
   }
 }
 

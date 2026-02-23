@@ -17,13 +17,21 @@ import ContainersPreview
 
 @available(SwiftStdlib 5.0, *)
 extension RigidDictionary where Key: ~Copyable, Value: ~Copyable {
+  @_alwaysEmitIntoClient
+  @_transparent
+  package borrowing func _find(
+    _ key: borrowing Key
+  ) -> (bucket: _Bucket?, hashValue: Int) {
+    self._keys._find(key)
+  }
+    
 #if COLLECTIONS_UNSTABLE_CONTAINERS_PREVIEW
   @inlinable
   @_lifetime(borrow self)
   public func value(
     forKey key: borrowing Key
   ) -> Borrow<Value>? {
-    guard let bucket = _keys._find(key).bucket else { return nil }
+    guard let bucket = self._find(key).bucket else { return nil }
     return Borrow(unsafeAddress: _valuePtr(at: bucket), borrowing: self)
   }
 #endif
@@ -37,9 +45,25 @@ extension RigidDictionary where Key: ~Copyable, Value: ~Copyable {
     forKey key: borrowing Key,
     _ body: (borrowing Value) throws(E) -> R?
   ) throws(E) -> R? {
-    guard let bucket = _keys._find(key).bucket else { return nil }
+    guard let bucket = self._find(key).bucket else { return nil }
     return try body(_valueBuf[bucket])
   }
+  
+#if COLLECTIONS_UNSTABLE_CONTAINERS_PREVIEW
+  @_alwaysEmitIntoClient
+  @_lifetime(borrow self)
+  package func _borrowKey(at bucket: _Bucket) -> Borrow<Key> {
+    assert(_keys._table.isOccupied(bucket))
+    return Borrow(unsafeAddress: _keyPtr(at: bucket), borrowing: self)
+  }
+
+  @_alwaysEmitIntoClient
+  @_lifetime(borrow self)
+  package func _borrowValue(at bucket: _Bucket) -> Borrow<Value> {
+    assert(_keys._table.isOccupied(bucket))
+    return Borrow(unsafeAddress: _valuePtr(at: bucket), borrowing: self)
+  }
+#endif
 }
 
 #endif

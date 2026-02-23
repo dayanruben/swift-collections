@@ -21,6 +21,9 @@ public struct RigidDictionary<
   Key: GeneralizedHashable & ~Copyable,
   Value: ~Copyable
 >: ~Copyable {
+  @usableFromInline
+  package typealias _Bucket = _HTable.Bucket
+  
   @_alwaysEmitIntoClient
   package var _keys: RigidSet<Key>
 

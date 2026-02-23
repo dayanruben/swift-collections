@@ -22,7 +22,7 @@ extension UniqueSet where Element: ~Copyable {
       return .init(bucket: bucket, remnant: item)
     }
     var hashValue = r.hashValue
-    if _ensureFreeCapacity(1) {
+    if _ensureFreeCapacity(1), !_storage._table.isSmall {
       hashValue = _storage._hashValue(for: item)
     }
     let bucket = _storage._insertNew(item, hashValue: hashValue)

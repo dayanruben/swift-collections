@@ -37,6 +37,15 @@ extension RigidSet where Element: ~Copyable {
   public borrowing func contains(_ item: borrowing Element) -> Bool {
     _find(item).bucket != nil
   }
+  
+#if COLLECTIONS_UNSTABLE_CONTAINERS_PREVIEW
+  @_alwaysEmitIntoClient
+  @_lifetime(borrow self)
+  package func _borrowValue(at bucket: _Bucket) -> Borrow<Element> {
+    assert(self._table.isOccupied(bucket))
+    return Borrow(unsafeAddress: self._memberPtr(at: bucket), borrowing: self)
+  }
+#endif
 }
 
 #endif
