@@ -18,6 +18,7 @@ import BasicContainers
 import ContainersPreview
 #endif
 
+#if compiler(>=6.3) && COLLECTIONS_UNSTABLE_NONCOPYABLE_KEYS
 
 class UniqueDictionaryTests: CollectionTestCase {
   func test_withKeys() {
@@ -118,5 +119,6 @@ class UniqueDictionaryTests: CollectionTestCase {
       }
     }
   }
-
 }
+
+#endif

@@ -13,7 +13,7 @@
 import ContainersPreview
 #endif
 
-#if compiler(>=6.2) && COLLECTIONS_UNSTABLE_NONCOPYABLE_KEYS
+#if compiler(>=6.3) && COLLECTIONS_UNSTABLE_NONCOPYABLE_KEYS
 
 @available(SwiftStdlib 5.0, *)
 extension UniqueDictionary where Key: ~Copyable, Value: ~Copyable {
