@@ -14,6 +14,7 @@
 @available(SwiftStdlib 5.0, *)
 extension RigidDictionary where Key: ~Copyable, Value: ~Copyable {
   @inlinable
+  @discardableResult
   public mutating func insertValue(
     _ value: consuming Value,
     forKey key: consuming Key
@@ -30,6 +31,7 @@ extension RigidDictionary where Key: ~Copyable, Value: ~Copyable {
   }
   
   @inlinable
+  @discardableResult
   public mutating func updateValue(
     _ value: consuming Value,
     forKey key: consuming Key
@@ -47,6 +49,7 @@ extension RigidDictionary where Key: ~Copyable, Value: ~Copyable {
   
 #if COLLECTIONS_UNSTABLE_CONTAINERS_PREVIEW
   @inlinable
+  @discardableResult
   @_lifetime(&self)
   public mutating func memoizedValue(
     forKey key: consuming Key,
