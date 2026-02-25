@@ -21,6 +21,114 @@ import ContainersPreview
 #if compiler(>=6.3) && COLLECTIONS_UNSTABLE_NONCOPYABLE_KEYS
 
 class UniqueDictionaryTests: CollectionTestCase {
+  func test_empty() {
+    let s = UniqueDictionary<Int, String>()
+    expectEqual(s.count, 0)
+    expectTrue(s.isEmpty)
+    expectTrue(s.isFull)
+    expectEqual(s.capacity, 0)
+    expectEqual(s.freeCapacity, 0)
+  }
+  
+  func test_init_minimumCapacity() {
+    withSome("capacity", in: 0 ..< 1000) { capacity in
+      let d = UniqueDictionary<Int, String>(minimumCapacity: capacity)
+      expectEqual(d.count, 0)
+      expectTrue(d.isEmpty)
+      expectEqual(d.isFull, capacity == 0)
+      expectGreaterThanOrEqual(d.capacity, capacity)
+      expectEqual(d.freeCapacity, d.capacity)
+    }
+  }
+  
+  func test_insert_one() {
+    typealias Key = LifetimeTracked<Int>
+    typealias Value = LifetimeTracked<String>
+    withLifetimeTracking { tracker in
+      var s = UniqueDictionary<Key, Value>()
+      let firstKey = tracker.instance(for: 42)
+      let firstValue = tracker.instance(for: "42")
+      expectNil(s.insertValue(firstValue, forKey: firstKey))
+      
+      expectTrue(s.containsKey(firstKey))
+      expectNotNil(s.withValue(forKey: firstKey) { $0 }) {
+        expectIdentical($0, firstValue)
+      }
+      
+      let secondKey = tracker.instance(for: 42)
+      let secondValue = tracker.instance(for: "42")
+      expectIdentical(s.insertValue(secondValue, forKey: secondKey), secondValue)
+      
+      expectTrue(s.containsKey(firstKey))
+      expectTrue(s.containsKey(secondKey))
+      _ = consume firstKey
+      expectTrue(s.containsKey(secondKey))
+      
+      expectNotNil(s.withValue(forKey: secondKey) { $0 }) {
+        expectIdentical($0, firstValue)
+      }
+      
+      expectEqual(s.count, 1)
+      expectFalse(s.isEmpty)
+      expectGreaterThanOrEqual(s.capacity, 1)
+    }
+  }
+
+  func test_update_one() {
+    typealias Key = LifetimeTracked<Int>
+    typealias Value = LifetimeTracked<String>
+    withLifetimeTracking { tracker in
+      var s = UniqueDictionary<Key, Value>()
+      let firstKey = tracker.instance(for: 42)
+      let firstValue = tracker.instance(for: "42")
+      expectNil(s.updateValue(firstValue, forKey: firstKey))
+      
+      expectTrue(s.containsKey(firstKey))
+      expectNotNil(s.withValue(forKey: firstKey) { $0 }) {
+        expectIdentical($0, firstValue)
+      }
+      
+      let secondKey = tracker.instance(for: 42)
+      let secondValue = tracker.instance(for: "42")
+      expectIdentical(s.updateValue(secondValue, forKey: secondKey), firstValue)
+      
+      expectTrue(s.containsKey(firstKey))
+      expectTrue(s.containsKey(secondKey))
+      _ = consume secondKey
+      expectTrue(s.containsKey(firstKey))
+      
+      expectNotNil(s.withValue(forKey: firstKey) { $0 }) {
+        expectIdentical($0, secondValue)
+      }
+      
+      expectEqual(s.count, 1)
+      expectFalse(s.isEmpty)
+      expectGreaterThanOrEqual(s.capacity, 1)
+    }
+  }
+
+  func test_init_minimumCapacity_growth() {
+    // These are the storage capacities we expect to see for a UniqueSet
+    // up to size 1000.
+    let expected = [0, 1, 2, 4, 7, 14, 28, 56, 112, 224, 448, 896, 1792]
+    var actual: Set<Int> = []
+    
+    // Check that we get the expected capacities for each size. UniqueSet
+    // should not prematurely allocate more than the size of the closest
+    // expected size.
+    var j = 0
+    withEvery("i", in: 0 ..< 1000) { i in
+      let set = UniqueDictionary<Int, String>(minimumCapacity: i)
+      if i > expected[j] {
+        j += 1
+      }
+      expectEqual(set.capacity, expected[j])
+      actual.insert(set.capacity)
+    }
+    expectEqual(actual.sorted(), expected)
+  }
+
+
   func test_withKeys() {
     typealias Key = LifetimeTracked<Int>
     typealias Value = LifetimeTracked<String>
