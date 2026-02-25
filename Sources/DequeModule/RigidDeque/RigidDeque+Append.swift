@@ -197,14 +197,15 @@ extension RigidDeque where Element: ~Copyable {
   /// - Complexity: O(*n*), where *n* is the number of items
   @_alwaysEmitIntoClient
   public mutating func append<
-    P: Producer<Element> & ~Copyable & ~Escapable
+    E: Error,
+    P: Producer<Element, E> & ~Copyable & ~Escapable
   >(
     maximumCount: Int? = nil,
     from producer: inout P
-  ) throws(P.ProducerError) {
+  ) throws(E) {
     try self.append(
       maximumCount: maximumCount ?? self.freeCapacity
-    ) { target throws(P.ProducerError) in
+    ) { target throws(E) in
       try producer.generate(into: &target)
     }
   }

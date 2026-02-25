@@ -76,9 +76,12 @@ extension UniqueDeque where Element: ~Copyable {
   ///       deque.
   ///
   /// - Complexity: O(`capacity`)
-  public init<P: Producer<Element> & ~Copyable & ~Escapable>(
+  public init<
+    E: Error,
+    P: Producer<Element, E> & ~Copyable & ~Escapable
+  >(
     capacity: Int, from producer: inout P
-  ) throws(P.ProducerError) {
+  ) throws(E) {
     self.init(capacity: capacity)
     try self.append(from: &producer)
   }

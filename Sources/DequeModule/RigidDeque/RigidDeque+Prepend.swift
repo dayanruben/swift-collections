@@ -208,14 +208,15 @@ extension RigidDeque where Element: ~Copyable {
   @_alwaysEmitIntoClient
   @inline(__always)
   public mutating func prepend<
-    P: Producer<Element> & ~Copyable & ~Escapable
+    E: Error,
+    P: Producer<Element, E> & ~Copyable & ~Escapable
   >(
     maximumCount: Int? = nil,
     from producer: inout P
-  ) throws(P.ProducerError) {
+  ) throws(E) {
     try self.prepend(
       addingCount: maximumCount ?? freeCapacity
-    ) { target throws(P.ProducerError) in
+    ) { target throws(E) in
       try producer.generate(into: &target)
     }
   }
