@@ -14,7 +14,10 @@ import InternalCollectionsUtilities
 import ContainersPreview
 #endif
 
+
 #if compiler(>=6.3) && COLLECTIONS_UNSTABLE_NONCOPYABLE_KEYS
+/// A fixed-capacity, noncopyable, unordered hashed container of unique
+/// elements.
 @available(SwiftStdlib 5.0, *)
 @frozen
 public struct RigidSet<Element: GeneralizedHashable & ~Copyable>: ~Copyable {
@@ -147,7 +150,7 @@ extension RigidSet where Element: ~Copyable {
   internal borrowing func _hashValue(
     for item: borrowing Element
   ) -> Int {
-    item._rawHashValue(seed: _seed)
+    item._rawHashValue_temp(seed: _seed)
   }
 }
 

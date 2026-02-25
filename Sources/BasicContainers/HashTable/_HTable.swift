@@ -223,4 +223,15 @@ extension _HTable {
     self._maxProbeLength = 0
   }
 }
+
+extension _HTable {
+  @usableFromInline
+  package func isTriviallyIdentical(to other: borrowing Self) -> Bool {
+    self._count == other._count
+    && self._capacity == other._capacity
+    && self._bitmap == other._bitmap
+    && self._maxProbeLength == other._maxProbeLength
+    && self.scale == other.scale
+  }
+}
 #endif

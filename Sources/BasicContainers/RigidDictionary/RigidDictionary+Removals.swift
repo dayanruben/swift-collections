@@ -32,7 +32,7 @@ extension RigidDictionary where Key: ~Copyable, Value: ~Copyable {
     self._keys._table.resolveHole(
       at: bucket,
       hashGenerator: {
-        keys[$0.offset]._rawHashValue(seed: seed)
+        keys[$0.offset]._rawHashValue_temp(seed: seed)
       },
       mover: {
         (keys + $1.offset).initialize(to: (keys + $0.offset).move())

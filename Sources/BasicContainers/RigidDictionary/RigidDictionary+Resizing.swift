@@ -67,10 +67,10 @@ extension RigidDictionary where Key: ~Copyable, Value: ~Copyable {
         selector: {
           srcKey = sourceKeys + $0.offset
           srcValue = sourceValues + $0.offset
-          return srcKey.pointee._rawHashValue(seed: seed)
+          return srcKey.pointee._rawHashValue_temp(seed: seed)
         },
         hashGenerator: {
-          targetKeys[$0.offset]._rawHashValue(seed: seed)
+          targetKeys[$0.offset]._rawHashValue_temp(seed: seed)
         },
         swapper: {
           swap(&srcKey.pointee, &targetKeys[$0.offset])

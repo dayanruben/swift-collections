@@ -46,10 +46,35 @@ public protocol GeneralizedHashable: GeneralizedEquatable, ~Copyable, ~Escapable
   ///   of this instance.
   func hash(into hasher: inout Hasher)
 
-  // Raw top-level hashing interface. Some standard library types (mostly
-  // primitives) specialize this to eliminate small resiliency overheads. (This
-  // only matters for tiny keys.)
-  func _rawHashValue(seed: Int) -> Int
+  /// The temporary substitute to `Hashable._rawHashValue(seed:)`, the raw
+  /// top-level hashing interface. Some standard library types (mostly
+  /// primitives) specialize this to eliminate small resiliency overheads. (This
+  /// only matters for tiny keys.)
+  ///
+  /// We avoid using the stdlib name as the stdlib's default implementation is
+  /// overwhelmingly preferable but it isn't (easily) reimplementable outside
+  /// of the stdlib.
+  ///
+  /// This will be replaced by the actual `Hashable` method when its
+  /// generalization ships.
+  func _rawHashValue_temp(seed: Int) -> Int
+}
+
+extension GeneralizedHashable where Self: ~Copyable & ~Escapable {
+  @inlinable
+  public func _rawHashValue_temp(seed: Int) -> Int {
+    var hasher = Hasher()
+    hasher.combine(seed)
+    self.hash(into: &hasher)
+    return hasher.finalize()
+  }
+}
+
+extension GeneralizedHashable where Self: Hashable {
+  @inlinable
+  public func _rawHashValue_temp(seed: Int) -> Int {
+    _rawHashValue(seed: seed)
+  }
 }
 
 extension GeneralizedHashable where Self: ~Copyable & ~Escapable {
@@ -60,7 +85,7 @@ extension GeneralizedHashable where Self: ~Copyable & ~Escapable {
   @_alwaysEmitIntoClient
   @inline(__always)
   public var hashValue: Int {
-    _rawHashValue(seed: 0)
+    _rawHashValue_temp(seed: 0)
   }
 }
 

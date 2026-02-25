@@ -64,10 +64,10 @@ extension RigidSet where Element: ~Copyable {
       from: &old._table,
       selector: {
         src = source + $0.offset
-        return src.pointee._rawHashValue(seed: seed)
+        return src.pointee._rawHashValue_temp(seed: seed)
       },
       hashGenerator: {
-        target[$0.offset]._rawHashValue(seed: seed)
+        target[$0.offset]._rawHashValue_temp(seed: seed)
       },
       swapper: {
         swap(&src.pointee, &target[$0.offset])

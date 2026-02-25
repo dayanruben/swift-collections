@@ -49,7 +49,7 @@ extension RigidSet where Element: ~Copyable {
     _table.resolveHole(
       at: bucket,
       hashGenerator: {
-        members[$0.offset]._rawHashValue(seed: seed)
+        members[$0.offset]._rawHashValue_temp(seed: seed)
       },
       mover: {
         (members + $1.offset).initialize(to: (members + $0.offset).move())

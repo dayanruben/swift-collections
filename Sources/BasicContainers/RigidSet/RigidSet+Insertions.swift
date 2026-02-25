@@ -65,7 +65,7 @@ extension RigidSet where Element: ~Copyable {
     let bucket = _table.insertNew_Large(
       hashValue: hashValue,
       hashGenerator: {
-        storage[$0]._rawHashValue(seed: seed)
+        storage[$0]._rawHashValue_temp(seed: seed)
       },
       swapper: {
         swap(&item, &storage[$0])
