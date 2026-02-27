@@ -61,4 +61,116 @@ extension UniqueSet where Element: ~Copyable {
   }
 }
 
+@available(SwiftStdlib 5.0, *)
+extension UniqueSet where Element: ~Copyable {
+  @_alwaysEmitIntoClient
+  public mutating func insert<E: Error>(
+    maximumCount: Int,
+    initializingWith initializer: (inout OutputSpan<Element>) throws(E) -> Void
+  ) throws(E) -> Void {
+    _ensureFreeCapacity(maximumCount)
+    try _storage.insert(
+      maximumCount: maximumCount, initializingWith: initializer)
+  }
+
+#if COLLECTIONS_UNSTABLE_CONTAINERS_PREVIEW
+  @_alwaysEmitIntoClient
+  public mutating func insert<
+    E: Error,
+    P: Producer<Element, E> & ~Copyable & ~Escapable
+  >(
+    from producer: inout P
+  ) throws(E) {
+    var done = false
+    while !done {
+      _ensureFreeCapacity(Swift.max(producer.underestimatedCount, 1))
+      try self.insert(maximumCount: self.freeCapacity) { target throws(E) in
+        while !target.isFull, !done {
+          done = try !producer.generate(into: &target)
+        }
+      }
+    }
+  }
+#endif
+
+#if COLLECTIONS_UNSTABLE_CONTAINERS_PREVIEW
+  @_alwaysEmitIntoClient
+  public mutating func insert<
+    D: Drain<Element> & ~Copyable & ~Escapable
+  >(
+    from drain: inout D
+  ) {
+    while true {
+      var span = drain.drainNext()
+      guard !span.isEmpty else { break }
+      while let next = span.popFirst() {
+        self.insert(next)
+      }
+    }
+  }
+#endif
+}
+
+@available(SwiftStdlib 5.0, *)
+extension UniqueSet /* where Element: Copyable */ {
+  @_alwaysEmitIntoClient
+  public mutating func insert(
+    copying items: borrowing Span<Element>
+  ) {
+    _ensureFreeCapacity(items.count)
+    _storage.insert(copying: items)
+  }
+  
+#if COLLECTIONS_UNSTABLE_CONTAINERS_PREVIEW
+  @_alwaysEmitIntoClient
+  package mutating func _insert<
+    S: BorrowingSequence<Element> & ~Copyable & ~Escapable
+  >(
+    copying items: borrowing S
+  ) {
+    _ensureFreeCapacity(items.underestimatedCount)
+    var it = items.makeBorrowingIterator()
+    while true {
+      let span = it.nextSpan()
+      guard !span.isEmpty else { break }
+      self.insert(copying: span)
+    }
+  }
+#endif
+  
+#if COLLECTIONS_UNSTABLE_CONTAINERS_PREVIEW
+  @_alwaysEmitIntoClient
+  @inline(__always)
+  public mutating func insert<
+    S: BorrowingSequence<Element> & ~Copyable & ~Escapable
+  >(
+    copying items: borrowing S
+  ) {
+    _insert(copying: items)
+  }
+#endif
+  
+  @_alwaysEmitIntoClient
+  @inline(__always)
+  public mutating func insert(copying items: some Sequence<Element>) {
+    _ensureFreeCapacity(items.underestimatedCount)
+    var it = items.makeIterator()
+    while let next = it.next() {
+      self.insert(next)
+    }
+  }
+  
+#if COLLECTIONS_UNSTABLE_CONTAINERS_PREVIEW
+  @_alwaysEmitIntoClient
+  @inline(__always)
+  public mutating func insert<
+    S: BorrowingSequence<Element> & Sequence<Element>
+  >(
+    copying items: borrowing S
+  ) {
+    _insert(copying: items)
+  }
+#endif
+}
+
 #endif

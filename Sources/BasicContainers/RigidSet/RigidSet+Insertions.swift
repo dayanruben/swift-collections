@@ -111,4 +111,146 @@ extension RigidSet where Element: ~Copyable {
   }
 }
 
+@available(SwiftStdlib 5.0, *)
+extension RigidSet where Element: ~Copyable {
+  @_alwaysEmitIntoClient
+  public mutating func insert<E: Error>(
+    maximumCount: Int,
+    initializingWith initializer: (inout OutputSpan<Element>) throws(E) -> Void
+  ) throws(E) -> Void {
+    precondition(maximumCount >= 0, "Cannot insert a negative number of items")
+    guard maximumCount > 0 else { return }
+    precondition(freeCapacity >= maximumCount, "RigidSet capacity overflow")
+    var remainder = maximumCount
+    
+    // FIXME: Instead of getting temporary buffers, we could place the new
+    // items in unoccupied buckets, then incrementally
+    // rehash them into their correct location, like the stdlib does for
+    // the bridging initializers for Set/Dictionary.
+    while remainder > 0 {
+      let c = Swift.min(remainder, 16)
+      try withTemporaryOutputSpan(
+        of: Element.self,
+        capacity: c
+      ) { output throws(E) in
+        defer {
+          output._consumeAll { span in
+            if span.count < c {
+              remainder = 0
+            } else {
+              remainder &-= span.count
+            }
+            while let next = span.popFirst() {
+              insert(next)
+            }
+          }
+        }
+        try initializer(&output)
+      }
+    }
+  }
+
+#if COLLECTIONS_UNSTABLE_CONTAINERS_PREVIEW
+  @_alwaysEmitIntoClient
+  public mutating func insert<
+    E: Error,
+    P: Producer<Element, E> & ~Copyable & ~Escapable
+  >(
+    maximumCount: Int? = nil,
+    from producer: inout P
+  ) throws(E) {
+    try self.insert(
+      maximumCount: maximumCount ?? freeCapacity
+    ) { target throws(E) in
+      while !target.isFull {
+        guard try producer.generate(into: &target) else { break }
+      }
+    }
+  }
+#endif
+
+#if COLLECTIONS_UNSTABLE_CONTAINERS_PREVIEW
+  @_alwaysEmitIntoClient
+  public mutating func insert<
+    D: Drain<Element> & ~Copyable & ~Escapable
+  >(
+    maximumCount: Int? = nil,
+    from drain: inout D
+  ) {
+    var remainder = maximumCount ?? freeCapacity
+    while remainder > 0 {
+      var span = drain.drainNext(maximumCount: remainder)
+      guard !span.isEmpty else { break }
+      while let next = span.popFirst() {
+        self.insert(next)
+      }
+      remainder &-= span.count
+    }
+  }
+#endif
+}
+
+@available(SwiftStdlib 5.0, *)
+extension RigidSet /* where Element: Copyable */ {
+  @_alwaysEmitIntoClient
+  public mutating func insert(
+    copying items: borrowing Span<Element>
+  ) {
+    var i = 0
+    while i < items.count {
+      self.insert(items[unchecked: i])
+      i &+= 1
+    }
+  }
+  
+#if COLLECTIONS_UNSTABLE_CONTAINERS_PREVIEW
+  @_alwaysEmitIntoClient
+  package mutating func _insert<
+    S: BorrowingSequence<Element> & ~Copyable & ~Escapable
+  >(
+    copying items: borrowing S
+  ) {
+    var it = items.makeBorrowingIterator()
+    while true {
+      let span = it.nextSpan()
+      guard !span.isEmpty else { break }
+      self.insert(copying: span)
+    }
+  }
+#endif
+  
+#if COLLECTIONS_UNSTABLE_CONTAINERS_PREVIEW
+  @_alwaysEmitIntoClient
+  @inline(__always)
+  public mutating func insert<
+    S: BorrowingSequence<Element> & ~Copyable & ~Escapable
+  >(
+    copying items: borrowing S
+  ) {
+    _insert(copying: items)
+  }
+#endif
+  
+  @_alwaysEmitIntoClient
+  @inline(__always)
+  public mutating func insert(copying items: some Sequence<Element>) {
+    var it = items.makeIterator()
+    while let next = it.next() {
+      self.insert(next)
+    }
+  }
+  
+#if COLLECTIONS_UNSTABLE_CONTAINERS_PREVIEW
+  @_alwaysEmitIntoClient
+  @inline(__always)
+  public mutating func insert<
+    S: BorrowingSequence<Element> & Sequence<Element>
+  >(
+    copying items: borrowing S
+  ) {
+    _insert(copying: items)
+  }
+#endif
+}
+
 #endif
