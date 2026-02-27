@@ -28,7 +28,8 @@ extension UniqueDictionary where Key: ~Copyable, Value: ~Copyable {
   public func value(
     forKey key: borrowing Key
   ) -> Borrow<Value>? {
-    _storage.value(forKey: key)
+    // FIXME: Why is this override necessary? Is it sound? It was triggered by RigidDictionary becoming `@_addressableForDependencies`.
+    _overrideLifetime(_storage.value(forKey: key), borrowing: self)
   }
 #endif
 

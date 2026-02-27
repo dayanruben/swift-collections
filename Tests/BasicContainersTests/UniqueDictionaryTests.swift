@@ -73,7 +73,7 @@ class UniqueDictionaryTests: CollectionTestCase {
       expectGreaterThanOrEqual(s.capacity, 1)
     }
   }
-
+  
   func test_update_one() {
     typealias Key = LifetimeTracked<Int>
     typealias Value = LifetimeTracked<String>
@@ -106,7 +106,7 @@ class UniqueDictionaryTests: CollectionTestCase {
       expectGreaterThanOrEqual(s.capacity, 1)
     }
   }
-
+  
   func test_init_minimumCapacity_growth() {
     // These are the storage capacities we expect to see for a UniqueSet
     // up to size 1000.
@@ -127,8 +127,8 @@ class UniqueDictionaryTests: CollectionTestCase {
     }
     expectEqual(actual.sorted(), expected)
   }
-
-
+  
+  
   func test_withKeys() {
     typealias Key = LifetimeTracked<Int>
     typealias Value = LifetimeTracked<String>
@@ -167,6 +167,67 @@ class UniqueDictionaryTests: CollectionTestCase {
     }
   }
   
+  func test_iteration_indexAfter() {
+    let c = 1000
+    typealias Key = LifetimeTracked<Int>
+    typealias Value = LifetimeTracked<String>
+    withLifetimeTracking { tracker in
+      var d = UniqueDictionary<Key, Value>()
+      withEvery("payload", in: 0 ..< c) { payload in
+        let key = tracker.instance(for: payload)
+        let value = tracker.instance(for: "\(payload)")
+        d.insertValue(value, forKey: key)
+        
+        var seen: Set<Int> = []
+        
+        var i = d.startIndex
+        while i != d.endIndex {
+          let item = d[i]
+          let payload = item.key.payload
+          expectEqual(item.value.payload, "\(payload)")
+          expectTrue(seen.insert(payload).inserted, "Duplicate item \(payload)")
+          i = d.index(after: i)
+        }
+        expectEqual(seen.count, payload + 1)
+      }
+    }
+  }
+  
+  @available(SwiftStdlib 6.2, *)
+  func test_iteration_indices() {
+    typealias Key = LifetimeTracked<Int>
+    typealias Value = LifetimeTracked<String>
+    let c = 200
+    withLifetimeTracking { tracker in
+      var d = UniqueDictionary<Key, Value>()
+      withEvery("payload", in: 0 ..< c) { payload in
+        let key = tracker.instance(for: payload)
+        let value = tracker.instance(for: "\(payload)")
+        d.insertValue(value, forKey: key)
+        
+        var seen: Set<Int> = []
+        let indices = d.indices
+        var it = indices.makeBorrowingIterator()
+        while true {
+          let next = it.nextSpan()
+          if next.isEmpty { break }
+          expectEqual(next.count, 1)
+          var i = 0
+          while i < next.count {
+            let index = next[i]
+            let item = d[index]
+            expectTrue(
+              seen.insert(item.key.payload).inserted,
+              "Duplicate item \(item.key.payload)")
+            expectEqual(item.value.payload, "\(item.key.payload)")
+            i += 1
+          }
+        }
+        expectEqual(seen.count, payload + 1)
+      }
+    }
+  }
+
   func test_removeValueForKey_one() {
     typealias Key = LifetimeTracked<Int>
     typealias Value = LifetimeTracked<String>

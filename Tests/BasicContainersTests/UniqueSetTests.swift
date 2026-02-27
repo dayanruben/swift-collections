@@ -133,6 +133,26 @@ class UniqueSetTests: CollectionTestCase {
     }
   }
   
+  func test_iteration_indexAfter() {
+    let c = 1000
+    withLifetimeTracking { tracker in
+      var s = UniqueSet<LifetimeTracked<Int>>()
+      withEvery("payload", in: 0 ..< c) { payload in
+        let item = tracker.instance(for: payload)
+        s.insert(item)
+        
+        var seen: Set<Int> = []
+        var i = s.startIndex
+        while i != s.endIndex {
+          let payload = s[i].payload
+          expectTrue(seen.insert(payload).inserted, "Duplicate item \(payload)")
+          i = s.index(after: i)
+        }
+        expectEqual(seen.count, payload + 1)
+      }
+    }
+  }
+  
   func test_remove_one() {
     withEvery("cap", in: [0, 1, 2, 4, 10, 100, 500]) { cap in
       let scale = _HTable.minimumScale(forCapacity: cap)

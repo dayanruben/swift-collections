@@ -17,6 +17,7 @@ import ContainersPreview
 #if compiler(>=6.2) && COLLECTIONS_UNSTABLE_NONCOPYABLE_KEYS
 @available(SwiftStdlib 5.0, *)
 @frozen
+@_addressableForDependencies
 public struct RigidDictionary<
   Key: GeneralizedHashable & ~Copyable,
   Value: ~Copyable

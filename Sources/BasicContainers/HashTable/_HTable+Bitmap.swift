@@ -67,7 +67,27 @@ extension _HTable.Bitmap {
   }
 
   @inlinable
-  package func firstUnoccupiedBucket(from start: Bucket) -> Bucket {
+  package func firstOccupiedBucket(from start: Bucket) -> Bucket? {
+    assert(isValid(start))
+
+    var word = start.word
+    var bits = _words[word]
+    bits.removeAll(upTo: start.bit)
+
+    while true {
+      if let bit = bits.firstMember {
+        return Bucket(word: word, bit: bit)
+      }
+      word &+= 1
+      if word >= _words.count {
+        return nil
+      }
+      bits = _words[word]
+    }
+  }
+
+  @inlinable
+  package func firstUnoccupiedBucket(wrappingFrom start: Bucket) -> Bucket {
     assert(isValid(start))
     var word = start.word
     var bits = _words[word]

@@ -36,7 +36,7 @@ extension _HTable {
   ///     iterator values outside the closure call that produced the original
   ///     hash table.
   @usableFromInline
-  package struct BucketIterator: ~Copyable, ~Escapable {
+  package struct BucketIterator: ~Escapable {
     @usableFromInline
     package typealias Bucket = _HTable.Bucket
     @usableFromInline
@@ -210,14 +210,14 @@ extension _HTable.BucketIterator {
   @_lifetime(self: copy self)
   package mutating func advanceToOccupied() -> Bool {
     if isAtEnd { return false }
-    guard _words != nil else {
+    if _words == nil {
       return true
     }
     while true {
       if let first = _nextBits.firstMember {
         _nextBits = _nextBits.shiftedDown(by: first)
-        _bucket._offset &+= first
         _nextBitCount &-= UInt8(first)
+        _bucket._offset &+= first
         break
       }
       guard _advanceToNextWord() else { return false }
@@ -225,6 +225,42 @@ extension _HTable.BucketIterator {
     return true
   }
 
+  /// If the current bucket is already occupied, this does nothing.
+  @usableFromInline
+  @discardableResult
+  @_lifetime(self: copy self)
+  package mutating func advanceToOccupied(
+    maximumCount: Int
+  ) -> Bool {
+    var remainder = UInt(bitPattern: maximumCount)
+    if isAtEnd { return false }
+    if _words == nil {
+      let delta = Swift.min(_endBucket._offset &- _bucket._offset, remainder)
+      _bucket._offset &+= delta
+      return true
+    }
+    while true {
+      if let first = _nextBits.firstMember {
+        let c = Swift.min(remainder, first)
+        _nextBits = _nextBits.shiftedDown(by: c)
+        _nextBitCount &-= UInt8(c)
+        _bucket._offset &+= c
+        remainder &-= c
+        break
+      }
+      if remainder < _nextBitCount {
+        _nextBits = _nextBits.shiftedDown(by: remainder)
+        _nextBitCount &-= UInt8(remainder)
+        _bucket._offset &+= remainder
+        remainder = 0
+        break
+      }
+      remainder &-= UInt(_nextBitCount)
+      guard _advanceToNextWord() else { return false }
+    }
+    return true
+  }
+  
   @usableFromInline
   @_lifetime(self: copy self)
   package mutating func wrapToOccupied() {
@@ -271,14 +307,14 @@ extension _HTable.BucketIterator {
   @discardableResult
   @_lifetime(self: copy self)
   package mutating func advanceToUnoccupied(
-    maximumCount: Int = .max
+    maximumCount: Int
   ) -> Bool {
     assert(maximumCount > 0)
     assert(!isAtEnd)
     var remainder = UInt(bitPattern: maximumCount)
     if _words == nil {
       let delta = Swift.min(_endBucket._offset &- _bucket._offset, remainder)
-      _bucket._offset = _bucket._offset + delta
+      _bucket._offset &+= delta
       return false
     }
     while remainder > 0 {
@@ -291,16 +327,15 @@ extension _HTable.BucketIterator {
         remainder &-= c
         break
       }
-      if remainder >= _nextBitCount {
-        remainder &-= UInt(_nextBitCount)
-        guard _advanceToNextWord() else { return false }
-      } else {
+      if remainder < _nextBitCount {
         _nextBits = _nextBits.shiftedDown(by: remainder)
         _nextBitCount &-= UInt8(remainder)
         _bucket._offset &+= remainder
         remainder = 0
         break
       }
+      remainder &-= UInt(_nextBitCount)
+      guard _advanceToNextWord() else { return false }
     }
     return true
   }
@@ -333,6 +368,20 @@ extension _HTable.BucketIterator {
     assert(self.isOccupied)
     let start = self.currentBucket
     self.advanceToUnoccupied(maximumCount: maximumCount)
+    let end = self.currentBucket
+    return Range(uncheckedBounds: (start, end))
+  }
+  
+  @usableFromInline
+  @_lifetime(self: copy self)
+  package mutating func nextUnoccupiedRegion(
+    maximumCount: Int = .max
+  ) -> Range<Bucket>? {
+    assert(maximumCount > 0)
+    guard self.advanceToUnoccupied() else { return nil }
+    assert(!self.isOccupied)
+    let start = self.currentBucket
+    self.advanceToOccupied(maximumCount: maximumCount)
     let end = self.currentBucket
     return Range(uncheckedBounds: (start, end))
   }

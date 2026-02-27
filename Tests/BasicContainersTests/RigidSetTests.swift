@@ -198,7 +198,7 @@ class RigidSetTests: CollectionTestCase {
   }
   
 #if COLLECTIONS_UNSTABLE_CONTAINERS_PREVIEW
-  func test_iterate() {
+  func test_borrowing_iterator() {
     withEvery("capacity", in: [0, 1, 2, 3, 4, 10, 100, 1000]) { capacity in
       withEvery("maximumCount", in: [1, 2, 3, Int.max]) { maximumCount in
         withLifetimeTracking { tracker in
@@ -224,7 +224,28 @@ class RigidSetTests: CollectionTestCase {
     }
   }
 #endif
-  
+
+  func test_iteration_indexAfter() {
+    withEvery("capacity", in: [0, 1, 2, 10, 100, 200]) { capacity in
+      withLifetimeTracking { tracker in
+        var s = RigidSet<LifetimeTracked<Int>>(capacity: capacity)
+        withEvery("payload", in: 0 ..< capacity) { payload in
+          let item = tracker.instance(for: payload)
+          s.insert(item)
+          
+          var seen: Set<Int> = []
+          var i = s.startIndex
+          while i != s.endIndex {
+            let payload = s[i].payload
+            expectTrue(seen.insert(payload).inserted, "Duplicate item \(payload)")
+            i = s.index(after: i)
+          }
+          expectEqual(seen.count, payload + 1)
+        }
+      }
+    }
+  }
+
   func test_remove_one() {
     withEvery("count", in: [0, 1, 2, 4, 10, 100, 500]) { count in
       withEvery("item", in: 0 ..< count) { item in

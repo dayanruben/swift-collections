@@ -13,6 +13,7 @@
 
 @available(SwiftStdlib 5.0, *)
 @frozen
+@_addressableForDependencies
 public struct UniqueDictionary<
   Key: GeneralizedHashable & ~Copyable,
   Value: ~Copyable

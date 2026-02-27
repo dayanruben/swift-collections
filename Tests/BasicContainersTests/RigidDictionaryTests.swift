@@ -279,6 +279,69 @@ class RigidDictionaryTests: CollectionTestCase {
     }
   }
   
+  func test_iteration_indexAfter() {
+    typealias Key = LifetimeTracked<Int>
+    typealias Value = LifetimeTracked<String>
+    withEvery("capacity", in: [1, 2, 10, 100, 200]) { capacity in
+      withLifetimeTracking { tracker in
+        var d = RigidDictionary<Key, Value>(capacity: capacity)
+        withEvery("payload", in: 0 ..< capacity) { payload in
+          let key = tracker.instance(for: payload)
+          let value = tracker.instance(for: "\(payload)")
+          d.insertValue(value, forKey: key)
+          
+          var seen: Set<Int> = []
+          
+          var i = d.startIndex
+          while i != d.endIndex {
+            let item = d[i]
+            let payload = item.key.payload
+            expectEqual(item.value.payload, "\(payload)")
+            expectTrue(seen.insert(payload).inserted, "Duplicate item \(payload)")
+            i = d.index(after: i)
+          }
+          expectEqual(seen.count, payload + 1)
+        }
+      }
+    }
+  }
+
+  @available(SwiftStdlib 6.2, *)
+  func test_iteration_indices() {
+    typealias Key = LifetimeTracked<Int>
+    typealias Value = LifetimeTracked<String>
+    withEvery("capacity", in: [1, 2, 10, 100, 200]) { capacity in
+      withLifetimeTracking { tracker in
+        var d = RigidDictionary<Key, Value>(capacity: capacity)
+        withEvery("payload", in: 0 ..< capacity) { payload in
+          let key = tracker.instance(for: payload)
+          let value = tracker.instance(for: "\(payload)")
+          d.insertValue(value, forKey: key)
+          
+          var seen: Set<Int> = []
+          let indices = d.indices
+          var it = indices.makeBorrowingIterator()
+          while true {
+            let next = it.nextSpan()
+            if next.isEmpty { break }
+            expectEqual(next.count, 1)
+            var i = 0
+            while i < next.count {
+              let index = next[i]
+              let item = d[index]
+              expectTrue(
+                seen.insert(item.key.payload).inserted,
+                "Duplicate item \(item.key.payload)")
+              expectEqual(item.value.payload, "\(item.key.payload)")
+              i += 1
+            }
+          }
+          expectEqual(seen.count, payload + 1)
+        }
+      }
+    }
+  }
+
   func test_removeValueForKey_one() {
     typealias Key = LifetimeTracked<Int>
     typealias Value = LifetimeTracked<String>
