@@ -190,16 +190,17 @@ extension UniqueDeque where Element: ~Copyable {
   ///     amortized over many similar invocations on the same deque.
   @_alwaysEmitIntoClient
   public mutating func append<
-    P: Producer<Element> & ~Copyable & ~Escapable
+    E: Error,
+    P: Producer<Element, E> & ~Copyable & ~Escapable
   >(
     maximumCount: Int? = nil,
     from producer: inout P
-  ) throws(P.ProducerError) {
+  ) throws(E) {
     if let maximumCount {
       _ensureFreeCapacity(maximumCount)
       try _storage._handle.uncheckedAppend(
         maximumCount: maximumCount
-      ) { target throws(P.ProducerError) in
+      ) { target throws(E) in
         while !target.isFull, try producer.generate(into: &target) {
           // Do nothing
         }
@@ -211,7 +212,7 @@ extension UniqueDeque where Element: ~Copyable {
       _ensureFreeCapacity(1)
       try _storage._handle.uncheckedAppend(
         maximumCount: freeCapacity
-      ) { target throws(P.ProducerError) in
+      ) { target throws(E) in
         while !target.isFull, try producer.generate(into: &target) {
           // Do nothing
         }

@@ -326,13 +326,14 @@ extension UniqueDeque where Element: ~Copyable {
   /// - Complexity: O(`self.count` + `maximumCount`)
   @_alwaysEmitIntoClient
   public mutating func replaceSubrange<
-    P: Producer<Element> & ~Copyable & ~Escapable
+    E: Error,
+    P: Producer<Element, E> & ~Copyable & ~Escapable
   >(
     _ subrange: Range<Int>,
     addingCount newItemCount: Int,
     from producer: inout P
-  ) throws(P.ProducerError) {
-    try replaceSubrange(subrange, addingCount: newItemCount) { target throws(P.ProducerError) in
+  ) throws(E) {
+    try replaceSubrange(subrange, addingCount: newItemCount) { target throws(E) in
       while !target.isFull, try producer.generate(into: &target) {
         // Do nothing
       }
