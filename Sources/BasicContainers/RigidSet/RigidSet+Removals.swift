@@ -19,7 +19,7 @@ extension RigidSet where Element: ~Copyable {
     guard let bucket = r.bucket else { return nil }
     return _remove(at: bucket)
   }
-
+  
   /// Remove the member currently at the specified occupied bucket,
   /// and mark it as unoccupied, without restoring the hash table's
   /// invariants. Lookup operations may fail after this.
@@ -38,7 +38,7 @@ extension RigidSet where Element: ~Copyable {
       })
     return result
   }
-
+  
   @inlinable
   package mutating func _remove(at bucket: _Bucket) -> Element {
     assert(_table.isOccupied(bucket))
@@ -55,6 +55,13 @@ extension RigidSet where Element: ~Copyable {
         (members + $1.offset).initialize(to: (members + $0.offset).move())
       })
     return result
+  }
+  
+  @inlinable
+  public mutating func removeAll() {
+    if isEmpty { return }
+    _deinitializeMembers()
+    _table.clear()
   }
 }
 

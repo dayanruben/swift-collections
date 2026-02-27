@@ -46,19 +46,19 @@ public struct RigidDictionary<
     // FIXME: This iterates over the bitmap twice: once in `self._dispose()`,
     // and once in `_keys.deinit`. `self` not being mutable really hurts us
     // here.
-    _dispose()
+    if !isEmpty {
+      _deinitializeValues()
+    }
+    _values?.deallocate()
   }
   
   @_alwaysEmitIntoClient
-  internal func _dispose() {
-    if !isEmpty {
-      let values = _valueBuf
-      var it = _keys._table.makeBucketIterator()
-      while let range = it.nextOccupiedRegion() {
-        values.extracting(range._offsets).deinitialize()
-      }
+  internal func _deinitializeValues() {
+    let values = _valueBuf
+    var it = _keys._table.makeBucketIterator()
+    while let range = it.nextOccupiedRegion() {
+      values.extracting(range._offsets).deinitialize()
     }
-    _values?.deallocate()
   }
 }
 

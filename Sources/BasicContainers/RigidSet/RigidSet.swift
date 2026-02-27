@@ -46,19 +46,19 @@ public struct RigidSet<Element: GeneralizedHashable & ~Copyable>: ~Copyable {
 
   @_alwaysEmitIntoClient
   deinit {
-    _dispose()
+    if !isEmpty {
+      _deinitializeMembers()
+    }
+    _members?.deallocate()
   }
   
   @_alwaysEmitIntoClient
-  internal func _dispose() {
-    if !isEmpty {
-      let storage = _memberBuf
-      var it = _table.makeBucketIterator()
-      while let range = it.nextOccupiedRegion() {
-        storage._extracting(unchecked: range._offsets).deinitialize()
-      }
+  internal func _deinitializeMembers() {
+    let storage = _memberBuf
+    var it = _table.makeBucketIterator()
+    while let range = it.nextOccupiedRegion() {
+      storage._extracting(unchecked: range._offsets).deinitialize()
     }
-    _members?.deallocate()
   }
 }
 

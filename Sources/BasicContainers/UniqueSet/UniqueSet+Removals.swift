@@ -30,6 +30,16 @@ extension UniqueSet where Element: ~Copyable {
     guard let bucket = r.bucket else { return nil }
     return _remove(at: bucket)
   }
+  
+  @inlinable
+  @inline(__always)
+  public mutating func removeAll(keepingCapacity keepCapacity: Bool = false) {
+    if keepCapacity {
+      _storage.removeAll()
+    } else {
+      _storage = RigidSet()
+    }
+  }
 }
 
 #endif

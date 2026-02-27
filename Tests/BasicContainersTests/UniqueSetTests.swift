@@ -219,5 +219,39 @@ class UniqueSetTests: CollectionTestCase {
     }
   }
 
+  func test_removeAll() {
+    withEvery("count", in: [0, 1, 2, 4, 10, 100, 1000]) { count in
+      withLifetimeTracking { tracker in
+        var set = UniqueSet<LifetimeTracked<Int>>()
+        for i in 0 ..< count {
+          let instance = tracker.instance(for: i)
+          set.insert(instance)
+        }
+        expectEqual(set.count, count)
+
+        set.removeAll()
+        expectEqual(set.count, 0)
+        expectEqual(set.capacity, 0)
+      }
+    }
+  }
+
+  func test_removeAll_keepingCapacity() {
+    withEvery("count", in: [0, 1, 2, 4, 10, 100, 1000]) { count in
+      withLifetimeTracking { tracker in
+        var set = UniqueSet<LifetimeTracked<Int>>()
+        for i in 0 ..< count {
+          let instance = tracker.instance(for: i)
+          set.insert(instance)
+        }
+        expectEqual(set.count, count)
+
+        set.removeAll(keepingCapacity: true)
+        expectEqual(set.count, 0)
+        expectGreaterThanOrEqual(set.capacity, count)
+      }
+    }
+  }
+
 }
 #endif

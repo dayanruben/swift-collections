@@ -263,7 +263,7 @@ class RigidSetTests: CollectionTestCase {
           set.insert(instance)
         }
         expectEqual(set.count, count)
-
+        
         withEvery("i", in: 0 ..< count) { i in
           let dupe = tracker.instance(for: i)
           let removed = set.remove(dupe)
@@ -273,6 +273,23 @@ class RigidSetTests: CollectionTestCase {
           }
         }
         expectEqual(set.count, 0)
+      }
+    }
+  }
+  
+  func test_removeAll() {
+    withEvery("count", in: [0, 1, 2, 4, 10, 100, 1000]) { count in
+      withLifetimeTracking { tracker in
+        var set = RigidSet<LifetimeTracked<Int>>(capacity: count)
+        for i in 0 ..< count {
+          let instance = tracker.instance(for: i)
+          set.insert(instance)
+        }
+        expectEqual(set.count, count)
+
+        set.removeAll()
+        expectEqual(set.count, 0)
+        expectEqual(set.capacity, count)
       }
     }
   }

@@ -339,6 +339,26 @@ class RigidDictionaryTests: CollectionTestCase {
       }
     }
   }
+  
+  func test_removeAll() {
+    typealias Key = LifetimeTracked<Int>
+    typealias Value = LifetimeTracked<String>
+    withEvery("capacity", in: [1, 2, 10, 100, 200]) { capacity in
+      withLifetimeTracking { tracker in
+        var d = RigidDictionary<Key, Value>(capacity: capacity)
+        for i in 0 ..< capacity {
+          let key = tracker.instance(for: i)
+          let value = tracker.instance(for: "\(i)")
+          d.insertValue(value, forKey: key)
+        }
+        
+        d.removeAll()
+        
+        expectEqual(d.count, 0)
+        expectEqual(d.capacity, capacity)
+      }
+    }
+  }
 }
 
 #endif

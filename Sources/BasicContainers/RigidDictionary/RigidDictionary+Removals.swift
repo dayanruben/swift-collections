@@ -63,6 +63,14 @@ extension RigidDictionary where Key: ~Copyable, Value: ~Copyable {
       })
     return oldValue
   }
+  
+  @inlinable
+  public mutating func removeAll() {
+    if isEmpty { return }
+    _deinitializeValues()
+    _keys._deinitializeMembers()
+    _keys._table.clear()
+  }
 }
 
 #endif

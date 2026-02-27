@@ -31,6 +31,16 @@ extension UniqueDictionary where Key: ~Copyable, Value: ~Copyable {
     _resize(minimumCapacity: self.count)
     return result
   }
+  
+  @inlinable
+  @inline(__always)
+  public mutating func removeAll(keepingCapacity keepCapacity: Bool = false) {
+    if keepCapacity {
+      _storage.removeAll()
+    } else {
+      _storage = RigidDictionary()
+    }
+  }
 }
 
 #endif
