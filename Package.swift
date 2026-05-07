@@ -14,11 +14,12 @@
 
 import PackageDescription
 
-// FIXME: This can sometimes induce a runtime crash (rdar://150240032)
 let _traits: Set<Trait> = [
   .default(
     enabledTraits: [
-      //"UnstableContainersPreview"
+//      "UnstableContainersPreview",
+//      "UnstableHashedContainers",
+//      "UnstableSortedCollections",
     ]),
   .trait(
     name: "UnstableContainersPreview",
@@ -123,7 +124,7 @@ let extraSettings: [SwiftSetting] = [
   // CMakeLists.txt and Xcode/Shared.xcconfig.
 ]
 
-let _sharedSettings: [SwiftSetting] = (
+let _settings: [SwiftSetting] = (
   defines
   + availabilityMacros.map { name, value in
       .enableExperimentalFeature("AvailabilityMacro=\(name): \(value)")
@@ -131,8 +132,7 @@ let _sharedSettings: [SwiftSetting] = (
   + extraSettings
 )
 
-let _settings: [SwiftSetting] = _sharedSettings + []
-let _testSettings: [SwiftSetting] = _sharedSettings + []
+let _testSettings: [SwiftSetting] = _settings
 
 struct CustomTarget {
   enum Kind {
@@ -322,7 +322,7 @@ let targets: [CustomTarget] = [
     directory: "RopeModule",
     exclude: ["CMakeLists.txt"],
     // FIXME: _modify accessors in RopeModule seem to be broken in Swift 6 mode
-    settings: _sharedSettings + [.swiftLanguageMode(.v5)]),
+    settings: _settings + [.swiftLanguageMode(.v5)]),
   .target(
     kind: .test,
     name: "RopeModuleTests",
