@@ -32,9 +32,9 @@ let _traits: Set<Trait> = [
     description: """
       Enables source-unstable prototypes of `SortedSet` and `SortedDictionary`,
       two potential new collection types implementing in-memory B-trees.
-      These are early developer drafts, and they not ready for use in 
+      These are early developer drafts, and they not ready for use in
       production. We will make significant, source breaking API changes to these
-      types before they ship. 
+      types before they ship.
       """),
   .trait(
     name: "UnstableHashedContainers",
@@ -104,6 +104,7 @@ let availabilityMacros: KeyValuePairs<String, String> = [
   "SwiftStdlib 6.2":  "macOS 26.0, iOS 26.0, watchOS 26.0, tvOS 26.0, visionOS 26.0",
   "SwiftStdlib 6.3":  "macOS 26.4, iOS 26.4, watchOS 26.4, tvOS 26.4, visionOS 26.4",
   "SwiftStdlib 6.4":  "macOS 9999, iOS 9999, watchOS 9999, tvOS 9999, visionOS 9999",
+  "SwiftStdlib 6.5":  "macOS 9999, iOS 9999, watchOS 9999, tvOS 9999, visionOS 9999",
   // Note: if you touch these, please make sure to also update the similar lists in
   // CMakeLists.txt and Xcode/Shared.xcconfig.
 ]
