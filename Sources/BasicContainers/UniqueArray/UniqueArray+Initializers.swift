@@ -50,7 +50,7 @@ extension UniqueArray where Element: ~Copyable {
     capacity: Int,
     initializingWith body: (inout OutputSpan<Element>) throws(E) -> Void
   ) throws(E) {
-    self.init(capacity: capacity)
+    self.init(minimumCapacity: capacity)
     try edit(body)
   }
 }
@@ -100,7 +100,7 @@ extension UniqueArray /*where Element: Copyable*/ {
     capacity: Int? = nil,
     copying contents: borrowing Source
   ) {
-    self.init(capacity: capacity ?? 0)
+    self.init(minimumCapacity: capacity ?? 0)
     self.append(copying: contents)
   }
 #endif
@@ -118,7 +118,7 @@ extension UniqueArray /*where Element: Copyable*/ {
     capacity: Int? = nil,
     copying contents: some Sequence<Element>
   ) {
-    self.init(capacity: capacity ?? 0)
+    self.init(minimumCapacity: capacity ?? 0)
     self.append(copying: contents)
   }
   
@@ -136,7 +136,7 @@ extension UniqueArray /*where Element: Copyable*/ {
     capacity: Int? = nil,
     copying contents: Source
   ) {
-    self.init(capacity: capacity ?? 0)
+    self.init(minimumCapacity: capacity ?? 0)
     self.append(copying: contents)
   }
 #endif
@@ -155,7 +155,7 @@ extension UniqueArray /*where Element: Copyable*/ {
     capacity: Int? = nil,
     copying span: Span<Element>
   ) {
-    self.init(capacity: capacity ?? span.count)
+    self.init(minimumCapacity: capacity ?? span.count)
     self.append(copying: span)
   }
 }

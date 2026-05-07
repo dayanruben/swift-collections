@@ -87,7 +87,7 @@ extension UniqueDeque where Element: ~Copyable {
   ) throws(E)
   where P.Element: ~Copyable
   {
-    self.init(capacity: capacity)
+    self.init(minimumCapacity: capacity)
     try self.append(addingCount: capacity, from: &producer)
   }
 #endif
@@ -109,7 +109,7 @@ extension UniqueDeque where Element: ~Copyable {
   ) throws(E)
   where P.Element: ~Copyable
   {
-    self.init(capacity: producer.underestimatedCount)
+    self.init(minimumCapacity: producer.underestimatedCount)
     try self.append(from: &producer)
   }
 #endif
@@ -150,7 +150,7 @@ extension UniqueDeque /*where Element: Copyable*/ {
     capacity: Int? = nil,
     copying contents: borrowing S
   ) {
-    self.init(capacity: capacity ?? 0)
+    self.init(minimumCapacity: capacity ?? 0)
     self._append(copying: contents)
   }
 #endif
@@ -168,7 +168,7 @@ extension UniqueDeque /*where Element: Copyable*/ {
     capacity: Int? = nil,
     copying contents: some Sequence<Element>
   ) {
-    self.init(capacity: capacity ?? contents.underestimatedCount)
+    self.init(minimumCapacity: capacity ?? contents.underestimatedCount)
     self.append(copying: contents)
   }
   
@@ -189,7 +189,7 @@ extension UniqueDeque /*where Element: Copyable*/ {
     capacity: Int? = nil,
     copying contents: S
   ) {
-    self.init(capacity: capacity ?? contents.underestimatedCount)
+    self.init(minimumCapacity: capacity ?? contents.underestimatedCount)
     self._append(copying: contents)
   }
 
@@ -208,7 +208,7 @@ extension UniqueDeque /*where Element: Copyable*/ {
     capacity: Int? = nil,
     copying contents: S
   ) {
-    self.init(capacity: capacity ?? contents.count)
+    self.init(minimumCapacity: capacity ?? contents.count)
     self._append(copying: contents)
   }
 #endif
