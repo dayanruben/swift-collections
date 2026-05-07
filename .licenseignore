@@ -15,3 +15,4 @@ Package@swift-*.swift
 CODEOWNERS
 LICENSE.txt
 Utils/Debugger/formatter_bytecode.py
+Utils/Debugger/FormatterFixtures/Package.swift
