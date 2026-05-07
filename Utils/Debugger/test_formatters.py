@@ -66,8 +66,9 @@ class TestRigidArrayFormatter(unittest.TestCase):
         """Build the test fixture with SwiftPM and return the binary path."""
         target = "FormatterFixtures"
         repo_root = _run(("git", "rev-parse", "--show-toplevel"))
-        _xcode_run(("swift", "build", "--product", target), cwd=repo_root)
-        bin_dir = _xcode_run(("swift", "build", "--show-bin-path"), cwd=repo_root)
+        fixture_root = os.path.join(repo_root, "Utils", "Debugger", "FormatterFixtures")
+        _xcode_run(("swift", "build", "--product", target), cwd=fixture_root)
+        bin_dir = _xcode_run(("swift", "build", "--show-bin-path"), cwd=fixture_root)
         return os.path.join(bin_dir, target)
 
     @classmethod

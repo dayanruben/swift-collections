@@ -367,19 +367,8 @@ let _products: [Product] = targets.compactMap { t in
 }
 let _targets: [Target] = targets.map { $0.toTarget() }
 
-let _formatterTargets: [Target] = [
-  .executableTarget(
-    name: "FormatterFixtures",
-    dependencies: ["BasicContainers"],
-    swiftSettings: _settings),
-]
-let _formatterProducts: [Product] = _formatterTargets.map { t in
-    .executable(name: t.name, targets: [t.name])
-}
-
 let package = Package(
   name: "swift-collections",
-  products: _products + _formatterProducts,
+  products: _products,
   traits: _traits,
-  targets: _targets + _formatterTargets
-)
+  targets: _targets)
