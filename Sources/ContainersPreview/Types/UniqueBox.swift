@@ -198,7 +198,7 @@ extension UniqueBox where Value: ~Copyable {
   }
 #endif
 
-#if UnstableContainersPreview
+#if compiler(>=6.3) && UnstableContainersPreview
   /// Return a borrowing reference to the contents of this box.
   @available(SwiftStdlib 5.0, *)
   @_alwaysEmitIntoClient
