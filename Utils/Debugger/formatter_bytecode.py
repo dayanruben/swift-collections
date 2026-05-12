@@ -340,7 +340,7 @@ class BytecodeSection:
         print(
             textwrap.dedent(
                 """\
-                #if swift(>=6.3)
+                #if compiler(>=6.3) && !objectFormat(Wasm)
                 #if objectFormat(MachO)
                 @section("__DATA_CONST,__lldbformatters")
                 #else
@@ -351,7 +351,7 @@ class BytecodeSection:
             file=output,
         )
         print(
-            f"let `{self.type_name} formatter`: {builder.type_decl} = (",
+            f"@usableFromInline internal let `{self.type_name} formatter`: {builder.type_decl} = (",
             file=output,
         )
         indent = "    "
