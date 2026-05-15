@@ -124,14 +124,14 @@ let extraSettings: [SwiftSetting] = [
   // CMakeLists.txt and Xcode/Shared.xcconfig.
 ]
 
-let _settings: [SwiftSetting] = (
+let _baseSettings: [SwiftSetting] = (
   defines
   + availabilityMacros.map { name, value in
       .enableExperimentalFeature("AvailabilityMacro=\(name): \(value)")
   }
-  + extraSettings
 )
 
+let _settings: [SwiftSetting] = _baseSettings + extraSettings
 let _testSettings: [SwiftSetting] = _settings
 
 struct CustomTarget {
@@ -359,7 +359,12 @@ let targets: [CustomTarget] = [
       "OrderedCollections",
       "_RopeModule",
     ],
-    exclude: ["CMakeLists.txt"])
+    exclude: ["CMakeLists.txt"]),
+  .target(
+    kind: .test,
+    name: "CollectionsModuleTests",
+    dependencies: ["Collections", "_CollectionsTestSupport"],
+    settings: _baseSettings),
 ]
 
 let _products: [Product] = targets.compactMap { t in

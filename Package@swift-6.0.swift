@@ -79,14 +79,14 @@ let extraSettings: [SwiftSetting] = [
   .enableExperimentalFeature("BuiltinModule"),
 ]
 
-let _sharedSettings: [SwiftSetting] = (
+let _baseSettings: [SwiftSetting] = (
   defines.map { .define($0) }
   + availabilityMacros.map { name, value in
       .enableExperimentalFeature("AvailabilityMacro=\(name): \(value)")
   }
-  + extraSettings
 )
 
+let _sharedSettings: [SwiftSetting] = _baseSettings + extraSettings
 let _settings: [SwiftSetting] = _sharedSettings + []
 let _testSettings: [SwiftSetting] = _sharedSettings + []
 
@@ -354,7 +354,12 @@ let targets: [CustomTarget] = [
       "_RopeModule",
       //"SortedCollections",
     ],
-    exclude: ["CMakeLists.txt"])
+    exclude: ["CMakeLists.txt"]),
+  .target(
+    kind: .test,
+    name: "CollectionsModuleTests",
+    dependencies: ["Collections", "_CollectionsTestSupport"],
+    settings: _baseSettings),
 ]
 
 var _products: [Product] = []
